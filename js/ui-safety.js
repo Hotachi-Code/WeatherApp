@@ -13,6 +13,9 @@ import { IMPACT } from './space.js';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+/** Csak http(s) linket engedünk ki — külső forrásból jövő URL-t sosem bízunk meg séma nélkül. */
+const safeUrl = (u) => (/^https?:\/\//i.test(String(u || '').trim()) ? esc(u) : '');
+
 const STATUS_ICON = { good: '✔', warning: '◐', serious: '?', critical: '!' };
 
 function badge(status, text) {
@@ -92,7 +95,7 @@ function threatRow(t) {
     ${t.instruction ? `<div class="threat-line threat-advice">${esc(t.instruction.slice(0, 300))}</div>` : ''}
     <div class="threat-foot">
       ${conf}
-      ${t.url ? `<a class="threat-link" href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">Hivatalos oldal ↗</a>` : ''}
+      ${safeUrl(t.url) ? `<a class="threat-link" href="${safeUrl(t.url)}" target="_blank" rel="noopener noreferrer">Hivatalos oldal ↗</a>` : ''}
     </div>
   </div>`;
 }
@@ -344,7 +347,7 @@ export function renderNews(news, state) {
         ${badge(s.verificationStatus, s.verificationLabel)}
       </div>
       <div class="story-sources">
-        ${s.articles.slice(0, 4).map((a) => `<a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">${esc(a.domain)} ↗</a>`).join('')}
+        ${s.articles.slice(0, 4).map((a) => safeUrl(a.url) ? `<a href="${safeUrl(a.url)}" target="_blank" rel="noopener noreferrer">${esc(a.domain)} ↗</a>` : `<span class="muted">${esc(a.domain)}</span>`).join('')}
         ${s.articles.length > 4 ? `<span class="muted">+${s.articles.length - 4} további</span>` : ''}
       </div>
     </div>`).join('');

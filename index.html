@@ -5,6 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Konszenzus Időjárás</title>
   <meta name="description" content="Több mint húsz meteorológiai modell súlyozott konszenzusa, a bizonytalanság őszinte feltüntetésével." />
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data:;
+    connect-src 'self'
+      https://api.open-meteo.com https://previous-runs-api.open-meteo.com
+      https://air-quality-api.open-meteo.com https://geocoding-api.open-meteo.com
+      https://api.bigdatacloud.net
+      https://earthquake.usgs.gov https://www.seismicportal.eu
+      https://eonet.gsfc.nasa.gov https://www.gdacs.org https://api.weather.gov
+      https://api.gdeltproject.org
+      https://services.swpc.noaa.gov https://kauai.ccmc.gsfc.nasa.gov;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'self';
+  " />
   <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
