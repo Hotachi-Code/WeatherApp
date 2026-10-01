@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Konszenzus Időjárás</title>
+  <meta name="description" content="Több mint húsz meteorológiai modell súlyozott konszenzusa, a bizonytalanság őszinte feltüntetésével." />
+  <meta name="theme-color" content="#f4f3f0" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Időjárás" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-row">
+      <button class="icon-btn" id="btn-search" aria-label="Hely keresése" aria-pressed="false">🔍</button>
+      <div class="place">
+        <div class="place-name" id="place-name">Hely kiválasztása…</div>
+        <div class="place-sub" id="place-sub">Írd be, hol vagy — vagy használd a helymeghatározást</div>
+      </div>
+      <button class="icon-btn" id="btn-locate" aria-label="Jelenlegi helyzetem">📍</button>
+      <button class="icon-btn" id="btn-refresh" aria-label="Frissítés">↻</button>
+    </div>
+
+    <div class="search-wrap" id="search-wrap" hidden>
+      <input class="search-input" id="search-input" type="search" inputmode="search"
+             placeholder="Város, község vagy cím…" autocomplete="off" enterkeyhint="search" />
+      <div class="results" id="results" hidden></div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div id="banners"></div>
+
+    <!-- Biztonsági helyzet: ez az első, amit látni kell -->
+    <section class="card" id="card-safety" hidden>
+      <h2 class="card-title">Biztonsági helyzet <span class="hint" id="safety-hint"></span></h2>
+      <div id="safety-summary"></div>
+      <div id="safety-active"></div>
+      <div id="safety-forecast"></div>
+      <div id="safety-nearby"></div>
+    </section>
+
+    <!-- Aktuális helyzet + konszenzus-ítélet -->
+    <section class="card" id="card-now" hidden>
+      <div class="now-head">
+        <div class="now-icon" id="now-icon">🌤️</div>
+        <div class="now-meta">
+          <div class="now-temp" id="now-temp">–°</div>
+          <div class="now-cond" id="now-cond"></div>
+          <div class="now-sub" id="now-sub"></div>
+        </div>
+      </div>
+      <div class="now-range" id="now-range"></div>
+      <div id="now-verdicts"></div>
+      <div class="source-line" id="now-sources"></div>
+    </section>
+
+    <!-- Részletes mérőszámok -->
+    <section class="card" id="card-metrics" hidden>
+      <h2 class="card-title">Mostani részletek <span class="hint">koppints a forrásokért</span></h2>
+      <div class="metrics" id="metrics"></div>
+    </section>
+
+    <!-- Órás előrejelzés -->
+    <section class="card" id="card-hourly" hidden>
+      <h2 class="card-title">Óránként <span class="hint" id="hourly-hint"></span></h2>
+      <div class="chips" id="hourly-range">
+        <button class="chip" data-hours="24" aria-pressed="true">24 óra</button>
+        <button class="chip" data-hours="48" aria-pressed="false">48 óra</button>
+        <button class="chip" data-hours="72" aria-pressed="false">3 nap</button>
+        <button class="chip" data-hours="168" aria-pressed="false">7 nap</button>
+      </div>
+
+      <div class="chart-holder" id="chart-temp"></div>
+      <div class="chart-legend">
+        <span><i class="legend-line"></i> súlyozott konszenzus</span>
+        <span><i class="legend-swatch" style="background: var(--band-inner)"></i> a források 80%-a itt van</span>
+        <span><i class="legend-swatch" style="background: var(--band-outer)"></i> teljes mezőny</span>
+      </div>
+
+      <h3 class="card-title" style="margin-top:16px">Csapadékesély <span class="hint" id="precip-hint">a források súlyozott szavazata</span></h3>
+      <div class="chart-holder" id="chart-precip"></div>
+
+      <details class="table-view">
+        <summary>Számok táblázatban</summary>
+        <div class="table-scroll" id="hourly-table"></div>
+      </details>
+    </section>
+
+    <!-- Napi előrejelzés -->
+    <section class="card" id="card-daily" hidden>
+      <h2 class="card-title">7 nap <span class="hint">koppints a részletekért</span></h2>
+      <div id="daily"></div>
+    </section>
+
+    <!-- Biztonsági hírek, megerősítés-jelöléssel -->
+    <section class="card" id="card-news" hidden>
+      <h2 class="card-title">Biztonsági hírek <span class="hint" id="news-hint"></span></h2>
+      <div id="news-list"></div>
+      <p class="verdict" id="news-note"></p>
+    </section>
+
+    <!-- Űridőjárás -->
+    <section class="card" id="card-space" hidden>
+      <h2 class="card-title">Űridőjárás <span class="hint" id="space-hint"></span></h2>
+      <div id="space-now"></div>
+      <div id="space-flare"></div>
+      <div id="space-forecast"></div>
+      <div id="space-aurora"></div>
+    </section>
+
+    <!-- Levegő és pollen -->
+    <section class="card" id="card-air" hidden>
+      <h2 class="card-title">Levegő és pollen <span class="hint">CAMS Európa / globális</span></h2>
+      <div class="metrics" id="air-metrics"></div>
+    </section>
+
+    <!-- Adatforrások -->
+    <section class="card" id="card-sources" hidden>
+      <h2 class="card-title">Adatforrások <span class="hint" id="sources-count"></span></h2>
+      <p class="verdict" id="calibration-note"></p>
+      <div id="sources-list" style="margin-top:12px"></div>
+      <div id="sources-off" style="margin-top:12px"></div>
+    </section>
+
+    <!-- Beállítások -->
+    <section class="card" id="card-settings" hidden>
+      <h2 class="card-title">Beállítások</h2>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Élő kalibráció</div>
+          <div class="toggle-desc">A súlyok igazítása ahhoz, melyik modell vált be ezen a helyen az elmúlt napokban.</div>
+        </div>
+        <button class="switch" id="tg-calibration" role="switch" aria-pressed="true" aria-label="Élő kalibráció"></button>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Kilógó modellek kiszűrése</div>
+          <div class="toggle-desc">A mezőnytől 2,5 szórásnál messzebb lévő értékek nem rontják az átlagot.</div>
+        </div>
+        <button class="switch" id="tg-outliers" role="switch" aria-pressed="true" aria-label="Kilógó modellek kiszűrése"></button>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Biztonsági hírek</div>
+          <div class="toggle-desc">Sajtóhírek veszélyhelyzetekről, megerősítettségi jelöléssel. Külön hírszolgáltatást kérdez le.</div>
+        </div>
+        <button class="switch" id="tg-news" role="switch" aria-pressed="true" aria-label="Biztonsági hírek"></button>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Sötét téma</div>
+          <div class="toggle-desc">Alapból a telefon beállítását követi.</div>
+        </div>
+        <button class="switch" id="tg-theme" role="switch" aria-pressed="false" aria-label="Sötét téma"></button>
+      </div>
+      <div class="toggle-row" style="display:block">
+        <div class="toggle-label">Figyelt körzet</div>
+        <div class="toggle-desc">Ekkora sugarú körben keresünk veszélyeseményeket a kijelölt hely körül.</div>
+        <div class="chips" id="radius-chips" style="margin-top:9px; margin-bottom:0">
+          <button class="chip" data-radius="50" aria-pressed="false">50 km</button>
+          <button class="chip" data-radius="150" aria-pressed="false">150 km</button>
+          <button class="chip" data-radius="300" aria-pressed="true">300 km</button>
+          <button class="chip" data-radius="600" aria-pressed="false">600 km</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Az adatok az ECMWF, DWD, NOAA, Met Office, Météo-France, ECCC, JMA, CMA, MET Norway, KNMI, DMI,
+    ARPAE és MeteoSwiss nyilvános modellfuttatásaiból származnak, az
+    <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> szolgáltatásán keresztül.<br />
+    Az előrejelzés valószínűség, nem ígéret — a megadott bizonytalanság a lényegi információ.
+  </footer>
+
+  <div id="sheet-root"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
